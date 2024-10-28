@@ -34,7 +34,7 @@ In Phase 2, the model was fine-tuned on an entity-specific sentiment analysis da
 
 ### Project Objectives
 1. **Real-time Sentiment Analysis**: Enable real-time insights by identifying entities in social media posts and classifying the sentiment expressed toward them.
-2. **Aspect-based Sentiment Classification**: Provide businesses with actionable data on public perception related to specific products, services, or brands. It can also help busineesses know what people are thinkng about their roducts before launching them and after launching them. The system could be used to collect all critical comments and see where improvments can be made.
+2. **Aspect-based Sentiment Classification**: Provide businesses with actionable data on public perception related to specific products, services, or brands. It can also help busineesses know what people are thinkng about their products before launching them and after launching them. The system could be used to collect all critical comments and see where improvments can be made.
 3. **Model Generalization**: Ensure the model generalizes well across datasets by fine-tuning on balanced, entity-specific sentiment dataset.
 4. **Build a dashboard**: The model will be called for inference over an ec2 instance to give sentiment on some products every month specifying which products have the highest and lowest sentiment in differnet domains.
 
