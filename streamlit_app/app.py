@@ -1,10 +1,64 @@
 import streamlit as st
 from streamlit_card import card
+import praw
+from datetime import datetime, timedelta
+from transformers import  AutoModelForSequenceClassification, BertTokenizer
+import torch
+
+# Path to the directory containing model.safetensors and config.json
+model_path = "C:/Users/grani/Documents/Customer_Sentiment_analysis_BERT/code"
+
+# Load the tokenizer
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+
+# Load the model by pointing to the folder (not directly to model.safetensors)
+model =  AutoModelForSequenceClassification.from_pretrained(model_path, trust_remote_code=True)
+
+# Move the model to the appropriate device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = model.to(device)
+#
+label_mapping = {0: "Negative", 1: "Neutral", 2: "Positive"}  # Adjust as needed
+
+
+def predict_sentence(sentence, model, tokenizer, label_mapping, max_len=128):
+    # Tokenize and encode the sentence
+    inputs = tokenizer.encode_plus(
+        sentence,
+        add_special_tokens=True,
+        max_length=max_len,
+        padding='max_length',
+        truncation=True,
+        return_tensors='pt'
+    )
+
+    # Move tensors to the appropriate device
+    input_ids = inputs['input_ids'].to(device)
+    attention_mask = inputs['attention_mask'].to(device)
+
+    # Set model to evaluation mode
+    model.eval()
+
+    # Run inference
+    with torch.no_grad():
+        outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+
+    # Get the predicted class
+    logits = outputs.logits
+    predicted_class = torch.argmax(logits, dim=1).item()
+
+    # Map the predicted class to label
+    predicted_label = label_mapping[predicted_class]
+
+    return predicted_label
+
+
+
+
+
 st.page_link("app.py", label="Home", icon="🏠")
 st.page_link("pages/test.py", label="Page 1")
 
-import praw
-from datetime import datetime, timedelta
 
 # Initialize Reddit API client with your credentials
 reddit = praw.Reddit(
@@ -84,10 +138,13 @@ for subredditTitle, comments in subreddit_dictionary.items():
     col2, col3 = st.columns([5, 1])
     
     for comment, value in comments.items():
+        current_sentimental_value=predict_sentence(comment, model, tokenizer, label_mapping)
+        subreddit_dictionary[subredditTitle][comment] = current_sentimental_value
+        new_value = subreddit_dictionary[subredditTitle][comment]
         with col2:
-            st.write("Comment:")
+            st.write("Comment: \n")
             st.write(comment)  # Display comment in the second column
 
         with col3:
-            st.write("Value:")
-            st.write(value)  # Display value in the third column
+            st.write("Its sentimental Value: \n")
+            st.write(new_value)  # Display value in the third column
