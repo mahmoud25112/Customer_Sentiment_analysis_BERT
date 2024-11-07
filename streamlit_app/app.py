@@ -6,7 +6,7 @@ from transformers import  AutoModelForSequenceClassification, BertTokenizer
 import torch
 
 # Path to the directory containing model.safetensors and config.json
-model_path = "C:/Users/grani/Documents/Customer_Sentiment_analysis_BERT/code"
+model_path = "../code"
 
 # Load the tokenizer
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
@@ -87,7 +87,7 @@ for subreddit_name in subreddits:
     print(f"\nFetching posts about `{brand_name}` in r/{subreddit_name}")
     subreddit = reddit.subreddit(subreddit_name)
     
-    for post in subreddit.search(brand_name, limit=10):  # Adjust limit as needed
+    for post in subreddit.search(brand_name, limit=50):  # Adjust limit as needed
         # Filter posts based on criteria
         if (post.score >= min_score and
             post.num_comments >= min_comments and
@@ -104,14 +104,21 @@ for subreddit_name in subreddits:
                 "URL": post.url,
                 "Content": post.selftext  # Short preview of the post content
             }
-             # Set comment sort order to 'top' and fetch top comments
+            
+            # Set comment sort order to 'top' and fetch top comments
             post.comment_sort = 'top'
             post.comments.replace_more(limit=0)  # Avoids collapsed comments
-            top_comments = [comment.body for comment in post.comments[:5]]
+            top_comments = [comment.body for comment in post.comments if "[deleted]" not in comment.body][:5]
 
-            # Attach top comments to post_info
-            post_info["Top_Comments"] = top_comments
-         
+            # Initialize post entry in subreddit_dictionary
+            if post_info['Title'] not in subreddit_dictionary:
+                subreddit_dictionary[post_info['Title']] = {"Comments": {}}
+            
+            # Attach each top comment with its default sentimental value
+            for comment in top_comments:
+                # Store each comment with its sentimental value initialized to 0
+                subreddit_dictionary[post_info['Title']]["Comments"][comment] = {"Sentimental_Value": 0}
+
             # Display each post as a "card"
             print("\n--- Post Card ---")
             print(f"Title: {post_info['Title']}")
@@ -121,30 +128,52 @@ for subreddit_name in subreddits:
             print(f"URL: {post_info['URL']}")
             print(f"Content Preview: {post_info['Content']}")
             print("\nTop Comments:")
-            for i, comment in enumerate(post_info["Top_Comments"], 1):
-                print(f"Comment {i}: {comment}")  # Show first 100 characters for brevity
-                if post_info['Title'] not in subreddit_dictionary:
-                    subreddit_dictionary[post_info['Title']] = {}
-                subreddit_dictionary[post_info['Title']][comment] = 0
-            # Store post and comments for further analysis
-            posts_data.append(post_info)
-            
+            for i, comment in enumerate(top_comments, 1):
+                print(f"Comment {i}: {comment}")
+
 
 print(subreddit_dictionary)
-for subredditTitle, comments in subreddit_dictionary.items():
-    # Loop through each comment-value pair for the subreddit
-    st.write("Title:")
-    st.subheader(subredditTitle) 
-    col2, col3 = st.columns([5, 1])
-    
-    for comment, value in comments.items():
-        current_sentimental_value=predict_sentence(comment, model, tokenizer, label_mapping)
-        subreddit_dictionary[subredditTitle][comment] = current_sentimental_value
-        new_value = subreddit_dictionary[subredditTitle][comment]
-        with col2:
-            st.write("Comment: \n")
-            st.write(comment)  # Display comment in the second column
+st.markdown(
+    """
+    <style>
+    .title-text {
+        font-size: 1.1rem;  /* Slightly smaller font size for titles */
+        font-weight: bold;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        white-space: normal;
+    }
+    .small-text {
+        font-size: 0.9rem;  /* Smaller font size for comments */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-        with col3:
-            st.write("Its sentimental Value: \n")
-            st.write(new_value)  # Display value in the third column
+# Convert post titles to a list to handle in pairs
+post_titles = list(subreddit_dictionary.keys())
+
+# Loop through post titles in pairs
+for i in range(0, len(post_titles), 2):
+    # Get the current pair of posts
+    post1_title = post_titles[i]
+    post2_title = post_titles[i + 1] if i + 1 < len(post_titles) else None  # Handle odd number of posts
+
+    # Create two columns for side-by-side display
+    col1, col2 = st.columns(2)
+
+    # Display the first post in the left column
+    with col1:
+        st.markdown(f"<p class='title-text'>{post1_title}</p>", unsafe_allow_html=True)
+        for comment, details in subreddit_dictionary[post1_title]["Comments"].items():
+            st.markdown(f"<p class='small-text'><strong>Comment:</strong> {comment}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p class='small-text'>Sentimental Value: {details['Sentimental_Value']}</p>", unsafe_allow_html=True)
+
+    # Display the second post in the right column if it exists
+    if post2_title:
+        with col2:
+            st.markdown(f"<p class='title-text'>{post2_title}</p>", unsafe_allow_html=True)
+            for comment, details in subreddit_dictionary[post2_title]["Comments"].items():
+                st.markdown(f"<p class='small-text'><strong>Comment:</strong> {comment}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p class='small-text'>Sentimental Value: {details['Sentimental_Value']}</p>", unsafe_allow_html=True)
