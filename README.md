@@ -72,106 +72,107 @@ This phase demonstrated that the model can generalize well, given that it perfor
 
 ---
 
+# AWS ETL Pipeline for Reddit Data Collection and Sentiment Analysis
 
-## Next Steps: Reddit Sentiment Analysis Dashboard on AWS
-
-## Project Overview
-
-### Purpose of the Project
-This project combines machine learning expertise with AWS cloud deployment skills to create a real-time sentiment analysis system for Reddit data. The application will:
-- Analyze sentiments for entities from Reddit posts on a monthly basis.
-- Display sentiment distribution for different entities (e.g., companies, products).
-- Allow users to input text and receive immediate sentiment predictions.
-
-### Final Product
-The final application will be a web-based dashboard hosted on AWS, featuring:
-- **Sentiment Visualization Dashboard**: Showcasing sentiment analysis of Reddit posts, highlighting entities with the highest and lowest sentiment scores.
-- **Real-Time Sentiment Analysis**: Enabling users to input text to test the model and receive instant sentiment predictions.
-- **Secure and Scalable Infrastructure**: Utilizing AWS services to ensure the application is secure and can scale with demand.
+This project is an AWS-based ETL pipeline designed to collect, process, and analyze Reddit data related to specific brands. The pipeline uses various AWS services, including Lambda, S3, EventBridge, ECS, and Batch, to provide an automated data extraction, transformation, and loading (ETL) process.
 
 ---
 
-## Project Requirements
+## Overview
 
-### Prerequisites
-- **AWS Account**: With permissions to create VPCs, EC2 instances, Application Load Balancers, Route 53 configurations, IAM roles, and S3 buckets.
-- **Data Collection Skills**: Ability to use Reddit's API for data collection or access to pre-collected Reddit data.
-- **Machine Learning Skills**: Experience in model training, specifically with BERT or other transformer-based models for sentiment analysis.
-
-### AWS Services Required
-- **VPC (Virtual Private Cloud)**: For network isolation and security.
-- **EC2 Instance**: To host the application and serve the ML model.
-- **Application Load Balancer (ALB)**: To securely route and balance traffic.
-- **S3 Buckets**: For storing data and assets.
-- **Route 53**: For domain name management.
-- **CloudWatch and VPC Flow Logs**: For monitoring and logging.
-- **IAM**: For secure access control and role management.
+The pipeline automates:
+- **Data Extraction**: Fetches posts from Reddit based on specified search criteria.
+- **Data Transformation**: Performs sentiment analysis and entity recognition on collected data.
+- **Data Storage**: Stores raw and processed data in S3 buckets.
+- **Scheduled Execution**: Executes the data collection and processing jobs weekly using EventBridge.
 
 ---
 
-## Step-by-Step Guide
+## Prerequisites
 
-### AWS Infrastructure Setup
+- **AWS Account** with necessary permissions
+- **AWS CLI** configured locally
+- **Docker** installed for containerization
+- **Reddit API Credentials**: Client ID, Secret, and User Agent
 
-1. **Set Up a VPC (Virtual Private Cloud)**
-    - **Create a New VPC**:
-        - Name: `RedditSentimentVPC`
-        - CIDR block: `10.0.0.0/16`
-        - Enable DNS hostnames.
-    - **Create Subnets**:
-        - Public Subnet: For the ALB (CIDR block: `10.0.1.0/24`).
-        - Private Subnet: For EC2 instances (CIDR block: `10.0.2.0/24`).
-    - **Internet Gateway**: Create and attach an Internet Gateway to the VPC.
-    - **Route Tables**: 
-        - Public Route Table: Associate with the public subnet and add a route to the Internet Gateway (`0.0.0.0/0`).
-        - Private Route Table: Associate with the private subnet.
+---
 
-2. **Launch an EC2 Instance**
-    - Select an AMI: Use `Ubuntu Server 20.04 LTS`.
-    - Instance Type: `t3.medium`.
-    - Security Group: Allow inbound traffic only from the ALB.
-    - IAM Role: Attach an IAM role with necessary permissions (e.g., S3 read access).
+## Steps for AWS Deployment
 
-3. **Configure Application Load Balancer (ALB)**
-    - Place it in the public subnet.
-    - Allow inbound traffic on ports `80` (HTTP) and `443` (HTTPS).
-    - Create a target group and register the EC2 instance.
+### Step 1: S3 Bucket Setup
 
-### Model Deployment and API Development
+1. Create two S3 buckets:
+   - `raw-data-bucket`: For storing raw data collected from Reddit.
+   - `processed-data-bucket`: For storing processed data after transformation.
 
-4. **Set Up the EC2 Instance**
-    - Install Dependencies: Update packages and set up a Python environment.
-    - Load the Fine-Tuned Model.
-    - Develop the Flask API.
+### Step 2: Lambda Function for Data Collection
 
-5. **Configure the Web Server**
-    - Application Server: Use Gunicorn to serve the Flask app.
+1. **Initialize the Lambda Environment**:
 
-### Secure the Application and Domain Configuration
+2. **Package and Deploy**:
 
-6. **Set Up HTTPS**
-    - SSL Certificate: Request a certificate via AWS Certificate Manager.
-    - Attach Certificate to ALB.
+3. **Set Environment Variables**:
+Configure the Lambda function in the AWS console under **Configuration** > **Environment variables**.
 
-7. **Configure Domain with Route 53**
-    - Hosted Zone: Create a hosted zone in Route 53.
+4. **Update Execution Time**:
+Set the Lambda timeout to 30 seconds.
 
-### Building the Dashboard and Data Visualization
+### Step 3: Schedule the Lambda with EventBridge
 
-8. **Develop the Data Collection Pipeline**
-    - **Reddit API Integration**.
-    - Store data in an S3 bucket.
+1. Go to **EventBridge** > **Rules** and create a rule to trigger the Lambda weekly:
+- **Pattern**: `cron(0 2 ? * SUN *)` to run every Sunday.
 
-9. **Build the Dashboard**
-    - Backend: Use Flask.
-    - Frontend: Implement visualizations with libraries like Plotly or D3.js.
+### Step 4: Local Testing and Docker Setup
 
-### Monitoring, Logging, and Testing
+1. **Set Up Environment**:
 
-10. **Set Up Monitoring and Logging**
-    - CloudWatch: Monitor EC2 instance performance metrics.
+2. **Install Dependencies**:
 
-11. **Test and Validate the Application**
-    - Functional Testing.
-    - Security Testing.
+3. **Dockerize**:
+- Create a `Dockerfile` and build your image:
+  ```
+  docker build -t sentiment-app .
+  ```
 
+### Step 5: Create and Deploy a Batch Job
+
+1. **Login to AWS ECR**:
+
+2. **Push Docker Image to ECR**.
+3. **Create Batch Execution Role**:
+- Open IAM, create a new role for ECS tasks, and attach the `AmazonECSTaskExecutionRolePolicy` and S3 access policies as needed.
+
+4. **Configure AWS Batch**:
+- Set up a job definition using the uploaded Docker image.
+- Configure environment variables, memory, and CPU settings.
+- Create a compute environment with Fargate as the backend.
+
+5. **Submit Batch Job**:
+- Go to AWS Batch, set up a job queue, and submit the job.
+
+### Step 6: Automate Batch Execution with EventBridge
+
+1. **Schedule Batch Job Execution**:
+- Configure EventBridge with the following cron expression to trigger every Thursday:
+  ```
+  cron(0 0 ? * 5 *)
+  ```
+
+### Summary
+
+This ETL pipeline:
+- Extracts Reddit posts weekly using AWS Lambda and stores them in S3.
+- Transforms data using sentiment and entity recognition in AWS Batch.
+- Loads transformed data back to S3 for further analysis or visualization.
+
+--- 
+
+## Next Steps
+
+For data visualization, consider integrating with an analytics dashboard like **AWS QuickSight** or exporting to a **BI tool** for enhanced insights.
+
+--- 
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
