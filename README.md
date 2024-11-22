@@ -72,20 +72,6 @@ This phase demonstrated that the model can generalize well, given that it perfor
 ![image](https://github.com/user-attachments/assets/e6275342-b2bb-4582-b334-529d0f9a0283)
 
 
----
-
-## Future Work
-
-### Model Deployment
-- Develop a dashboard to showcase the model, allowing users to inquire about different entities and check the sentiment on those specific entities.
-
-### AWS Integration
-- Deploy the model on an AWS EC2 instance to ensure scalability and accessibility.
-
-### Continuous Improvement
-- Expand the model by fine-tuning on more comprehensive datasets for entity recognition and sentiment classification.
-
----
 
 # AWS ETL Pipeline for Reddit Data Collection and Sentiment Analysis
 
