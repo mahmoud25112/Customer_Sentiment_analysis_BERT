@@ -4,6 +4,21 @@ A real-time, entity-specific sentiment analysis system developed using advanced 
 
 ## **Phase 1: Initial Model Training**
 
+### **Logistic Regression Model and Findings**
+1. **Data Preparation:**
+   - **Exploratory Data Analysis (EDA):**
+     - Inspected and relabeled sentiments: **1 (positive)** and **0 (negative)**.
+     - Checked for outliers and duplicates.
+   - **Data Cleaning:**
+     - Converted text to lowercase.
+     - Replaced URLs and usernames with placeholders (e.g., `<URL>` and `<USER>`).
+     - Removed special characters and stop words.
+     - Applied lemmatization for tokenization.
+   - **Feature Extraction:**
+     - Used **TF-IDF vectorization** with 3000 features, determined optimal after comparison with 7000 features.
+
+### **BERT Model**
+
 The initial model training is documented in the `Sentiment_analysis.ipynb` notebook.
 
 ### **Dataset and Label Augmentation**
