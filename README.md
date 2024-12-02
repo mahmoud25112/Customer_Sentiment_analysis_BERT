@@ -1,6 +1,6 @@
 # **Customer Sentiment Analysis Using BERT**
 
-A real-time, entity-specific sentiment analysis system developed using advanced data mining and natural language processing (NLP) techniques. The system is designed to accurately identify entities mentioned in social media posts, particularly tweets, and classify the sentiment expressed towards each entity. By fine-tuning lightweight language models like **DistilBERT** or **TinyBERT** on a cleaned and preprocessed Twitter dataset, this solution aims to deliver high accuracy in **aspect-based sentiment classification**. Businesses can leverage this system to gain granular insights into public perception regarding their products, services, or brands.
+A real-time, entity-specific sentiment analysis system developed using advanced data mining and natural language processing (NLP) techniques. The system is designed to accurately identify entities mentioned in social media posts, particularly tweets, and classify the sentiment expressed towards each entity. By fine-tuning large language models like **BERT Uncased** on a cleaned and preprocessed Twitter dataset, this solution aims to deliver high accuracy in **aspect-based sentiment classification**. Businesses can leverage this system to gain granular insights into public perception regarding their products, services, or brands.
 
 ## **Phase 1: Initial Model Training**
 
